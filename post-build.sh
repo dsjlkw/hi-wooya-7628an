@@ -1,16 +1,17 @@
 #!/bin/sh
 set -e -x
 
-_vermagic="$(curl --retry 5 -L https://downloads.openwrt.org/releases/21.02.0-rc4/targets/ramips/mt76x8/openwrt-21.02.0-rc4-ramips-mt76x8.manifest | sed -e '/^kernel/!d' -e 's/^.*-\([^-]*\)$/\1/g' | head -n 1)"
+_version="$(printf "%s" "$REPO_BRANCH" | cut -c 2-)"
+_vermagic="$(curl --retry 5 -L https://downloads.openwrt.org/releases/${_version}/targets/ramips/mt76x8/openwrt-${_version}-ramips-mt76x8.manifest | sed -e '/^kernel/!d' -e 's/^.*-\([^-]*\)$/\1/g' | head -n 1)"
 
 OLD_CWD="$(pwd)"
 
 [ "$(find build_dir/ -name .vermagic -exec cat {} \;)" = "$_vermagic" ] && \
 mkdir ~/imb && \
-tar -xJf bin/targets/ramips/mt76x8/openwrt-imagebuilder-21.02.0-rc4-ramips-mt76x8.Linux-x86_64.tar.xz -C ~/imb && \
+tar -xJf bin/targets/ramips/mt76x8/openwrt-imagebuilder-${_version}-ramips-mt76x8.Linux-x86_64.tar.xz -C ~/imb && \
 cd ~/imb/* && \
 make image PROFILE=unielec_u7628-01-16m FILES=files/ PACKAGES="kmod-usb-storage block-mount kmod-fs-ext4 luci luci-proto-qmi kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan kmod-usb-uhci" && \
-mv bin/targets/ramips/mt76x8/openwrt-21.02.0-rc4-ramips-mt76x8-unielec_u7628-01-16m-squashfs-sysupgrade.bin ../ && \
+mv bin/targets/ramips/mt76x8/openwrt-${_version}-ramips-mt76x8-unielec_u7628-01-16m-squashfs-sysupgrade.bin ../ && \
 make clean && \
 mv ../*.bin "$OLD_CWD/bin/targets/ramips/mt76x8/"
 
