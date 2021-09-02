@@ -1,0 +1,151 @@
+#
+# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+# Description: Build OpenWrt using GitHub Actions
+#
+
+name: Build OpenWrt
+
+on:
+  repository_dispatch:
+  release:
+    types: published
+  push:
+    branches:
+      - hi-wooya-7628an
+#  schedule:
+#    - cron: 0 8 * * 5
+#  watch:
+#    types: started
+
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_BRANCH: v21.02.0-rc4 
+  FEEDS_CONF: feeds.conf.default
+  DIY_P1_SH: pre-feeds.sh
+  DIY_P2_SH: pre-configure.sh
+  DIY_POST_SH: post-build.sh
+  UPLOAD_FIRMWARE: true
+  TZ: Asia/Shanghai
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-1804)
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+
+    - name: Clone source code
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: Load custom feeds
+      run: |
+        [ ! -e $FEEDS_CONF ] || mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Compile OpenWrt
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        chmod +x $GITHUB_WORKSPACE/$DIY_POST_SH
+        $GITHUB_WORKSPACE/$DIY_POST_SH
+        echo "::set-output name=status::success"
+        echo "::set-env name=SDK_NAME::$( basename bin/targets/*/*/openwrt-sdk-* )"
+        echo "::set-env name=IMBUILDER_NAME::$( basename bin/targets/*/*/openwrt-imagebuilder-* )"
+        echo "::set-env name=FIRMWARE_FILENAME::$( basename bin/targets/*/*/*-firmware.tar.xz )"
+        echo "::set-env name=TARGET_DIR::$( readlink -f bin/targets/*/* )"
+
+    - name: Check space usage
+      if: (!cancelled())
+      run: df -hT
+
+    - name: Upload artifacts if failed
+      uses: actions/upload-artifact@main
+      if: (!cancelled()) && !(steps.compile.outputs.status == 'success')
+      with:
+        name: fallback_artifacts
+        path: ${{ env.TARGET_DIR }}
+        if-no-files-found: error
+
+    - name: Upload checksums
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ env.IMBUILDER_NAME }}
+        path: ${{ env.TARGET_DIR }}/*sums
+        if-no-files-found: error
+
+    - name: Upload imagebuilder
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ env.IMBUILDER_NAME }}
+        path: ${{ env.TARGET_DIR }}/openwrt-imagebuilder-*
+        if-no-files-found: error
+
+    - name: Upload SDK
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ env.SDK_NAME }}
+        path: ${{ env.TARGET_DIR }}/openwrt-sdk-*
+        if-no-files-found: error
+
+    - name: Upload firmware
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ env.FIRMWARE_FILENAME }}
+        path: ${{ env.TARGET_DIR }}/*-firmware.tar.xz
+        if-no-files-found: error
+
+    - name: Print checksums
+      if: steps.compile.outputs.status == 'success' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        sha256sum *
