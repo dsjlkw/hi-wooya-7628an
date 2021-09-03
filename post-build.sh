@@ -18,7 +18,7 @@ echo src/gz openwrt_packages http://downloads.openwrt.org/releases/${_version}/p
 echo src/gz openwrt_routing http://downloads.openwrt.org/releases/${_version}/packages/mipsel_24kc/routing >> files/etc/opkg/distfeeds.conf && \
 echo src/gz openwrt_telephony http://downloads.openwrt.org/releases/${_version}/packages/mipsel_24kc/telephony >> files/etc/opkg/distfeeds.conf && \
 cp -r $GITHUB_WORKSPACE/files/* files/ && \
-make image PROFILE=unielec_u7628-01-16m FILES=files/ PACKAGES="kmod-usb-storage block-mount kmod-fs-ext4 luci luci-proto-qmi kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan kmod-usb-uhci kmod-usb-storage-uas kmod-usb-storage-extras luci-i18n-base-zh-cn" FILES=files && \
+make image PROFILE=unielec_u7628-01-16m PACKAGES="kmod-usb-storage block-mount kmod-fs-ext4 luci luci-proto-qmi kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan kmod-usb-uhci kmod-usb-storage-uas kmod-usb-storage-extras luci-i18n-base-zh-cn" FILES=files && \
 mv bin/targets/ramips/mt76x8/openwrt-${_version}-ramips-mt76x8-unielec_u7628-01-16m-squashfs-sysupgrade.bin ../ && \
 make clean && \
 mv ../*.bin "$OLD_CWD/bin/targets/ramips/mt76x8/"

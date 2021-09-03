@@ -13,7 +13,6 @@ set -e -x
 
 curl --retry 5 -L "https://downloads.openwrt.org/releases/21.02.0-rc4/targets/ramips/mt76x8/config.buildinfo" > .config
 sed -e '/^CONFIG_TARGET_DEVICE_/d' -e '/CONFIG_TARGET_ALL_PROFILES=y/d' -i .config
-sed -i 's/CONFIG_TARGET_ALL_PROFILES=.*/CONFIG_TARGET_ALL_PROFILES=n/g' .config
 cat "$GITHUB_WORKSPACE/additional_config.txt" >> .config
 cat "$GITHUB_WORKSPACE/hi-wooya-7628an.dtsi" > target/linux/ramips/dts/mt7628an_unielec_u7628-01.dtsi
 
