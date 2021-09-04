@@ -42,11 +42,6 @@
 			gpios = <&gpio 44 GPIO_ACTIVE_LOW>;
 		};
 
-		wlan {
-			label = "green:wlan";
-			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
-		};
-
 		wan {
 			label = "green:wan";
 			gpios = <&gpio 43 GPIO_ACTIVE_LOW>;
@@ -78,7 +73,12 @@
 
 &state_default {
 	gpio {
-		groups = "gpio", "p0led_an", "p1led_an", "p2led_an", "p3led_an", "p4led_an", "refclk", "wdt", "wled_an";
+		groups = "gpio";
+		function = "gpio";
+	};
+
+	wdt {
+		groups = "wdt";
 		function = "gpio";
 	};
 };
