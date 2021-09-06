@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e -x
 
-_version="$(printf "%s" "$REPO_BRANCH" | cut -c 2-)"
+_version="21.02.0"
 _vermagic="$(curl --retry 5 -L https://downloads.openwrt.org/releases/${_version}/targets/ramips/mt76x8/openwrt-${_version}-ramips-mt76x8.manifest | sed -e '/^kernel/!d' -e 's/^.*-\([^-]*\)$/\1/g' | head -n 1)"
 
 OLD_CWD="$(pwd)"
