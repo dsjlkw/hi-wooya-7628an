@@ -16,7 +16,7 @@ on:
     types: published
   push:
     branches:
-      - hi-wooya-7628an
+      - openwrt-21.02
 #  schedule:
 #    - cron: 0 8 * * 5
 #  watch:
