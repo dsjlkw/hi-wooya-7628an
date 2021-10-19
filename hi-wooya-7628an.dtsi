@@ -32,6 +32,7 @@
 			gpios = <&gpio 38 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_RESTART>;
 		};
+
 	};
 
 	leds {
@@ -60,6 +61,10 @@
 };
 
 &pcie {
+	status = "okay";
+};
+
+&sdhci {
 	status = "okay";
 };
 
