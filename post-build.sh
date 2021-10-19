@@ -10,9 +10,10 @@ OLD_CWD="$(pwd)"
 mkdir ~/imb && \
 tar -xJf bin/targets/ramips/mt76x8/openwrt-imagebuilder-${_version}-ramips-mt76x8.Linux-x86_64.tar.xz -C ~/imb && \
 cd ~/imb/* && \
+mkdir -p files && \
 cp -r $GITHUB_WORKSPACE/files/* files/ && \
-make image PROFILE=unielec_u7628-01-16m PACKAGES="kmod-usb-storage block-mount kmod-fs-ext4 luci luci-proto-qmi kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan kmod-usb-uhci kmod-usb-storage-uas kmod-usb-storage-extras luci-i18n-base-zh-cn wget ca-certificates" FILES=files && \
-mv bin/targets/ramips/mt76x8/openwrt-${_version}-ramips-mt76x8-unielec_u7628-01-16m-squashfs-sysupgrade.bin ../ && \
+make image PROFILE=unielec_u7628-01-16m PACKAGES="kmod-usb-storage block-mount kmod-fs-ext4 luci-proto-qmi kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan kmod-usb-uhci kmod-usb-storage-uas kmod-usb-storage-extras luci-i18n-base-zh-cn" FILES=files && \
+mv bin/targets/ramips/mt76x8/openwrt-${_version}-ramips-mt76x8-unielec_u7628-01-16m-squashfs-sysupgrade.bin ../openwrt-${_version}-ramips-mt76x8-4g-unielec_u7628-01-16m-squashfs-sysupgrade.bin && \
 make clean && \
 mv ../*.bin "$OLD_CWD/bin/targets/ramips/mt76x8/"
 
